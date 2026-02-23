@@ -46,7 +46,7 @@ def logout_page(req):
 
 def get_user_role(user):
     if not user.is_authenticated:
-        return 'gust'
+        return 'guest'
     if user.is_superuser:
         return 'admin'
     return 'user'
@@ -78,7 +78,10 @@ def products_page(req):
                 products = products.order_by('price')
             case 'price-desc':
                 products = products.order_by('-price')
-    
+    else:
+        search_value = ''
+        sort_by = ''
+
     paginator = Paginator(products, 10)
     page_num = req.GET.get('page')
     page_obj = paginator.get_page(page_num)

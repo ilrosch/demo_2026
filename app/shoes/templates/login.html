@@ -1,8 +1,10 @@
 {% extends 'base.html' %}
 
+{% load static %}
 {% load django_bootstrap5 %}
 
 {% block content %}
+<img src="{% static 'img/logo.png' %}" alt="Логотип" style="object-fit: contain; width: 150px;">
 <div class="card" style="max-width: 500px;">
     <div class="card-header">
         <h1 class="card-title">{{title}}</h1>
@@ -11,7 +13,7 @@
         <form method="post">
             {% csrf_token %}
             {% bootstrap_form form show_help=False %}
-            {% bootstrap_button button_type="submit" content='Войти'%}
+            {% bootstrap_button button_type="submit" button_class="btn-light" content='Войти'%}
         </form>
         <hr>
         <div class="d-flex flex-column gap-3">
