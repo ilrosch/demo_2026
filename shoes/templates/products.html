@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block style %}
+<style>
+    .list-group-item {
+        background-color: transparent !important;
+    }
+
+    .big-sale {
+        background-color: #2E8B57 !important;
+    }
+
+    .empty {
+        background-color: lightblue !important;
+    }
+
+</style>
+{% endblock %}
+
+{% block content %}
+    {% if user_role is not 'guest' %}
+        <div class="d-flex justify-content-end align-items-center gap-3 bg-dark p-3 rounded-4">
+            <div class="text-light">{{user}}</div>
+            <a href="{% url 'main:logout' %}" class="btn btn-light">Выход</a>
+        </div>
+    {% endif %}
+
+    <div class="d-flex flex-column gap-2">
+        {% for product in page_obj %}
+            <div class="card rounded-3 {% if product.sale > 15 %}big-sale{% endif %} {% if product.amount == 0 %}empty{% endif %}">
+                <div class="row card-body">
+                    <div class="col-4">
+                        <img src="{% if product.image %}{% static product.image %}{% else %}{% static 'img/picture.png' %}{% endif %}" alt="Фото" style="width: 100%; object-fit: contain;">
+                    </div>
+                    <div class="col-6">
+                        <h2 class="h3 mb-3">{{product.category.name}} | {{product.name}}</h2>
+                        <ul class="list-group">
+                            <li class="list-group-item">Описание товара: {{product.description}}</li>
+                            <li class="list-group-item">Производитель: {{product.producer.name}}</li>
+                            <li class="list-group-item">Поставщик: {{product.provider.name}}</li>
+                            <li class="list-group-item">Цена:
+                                {% if product.sale and product.sale > 0 %}
+                                <span style="color: black">{{ product.final_price|floatformat:0 }}</span>
+                                <span style="color: red"><s>{{ product.price }}</s></span>
+                                {% else %}
+                                    {{product.price}}
+                                {% endif %}
+                            </li>
+                            <li class="list-group-item">Единица измерения: {{product.unit.name}}</li>
+                            <li class="list-group-item">Количество на складе: {{product.amount}}</li>
+                        </ul>
+                    </div>
+                    <div class="col-2 text-center">
+                        <div>Скидка</div>
+                        <p>{{product.sale}}%</p>
+                    </div>
+                </div>
+            </div>
+        {% empty %}
+            <div>Пусто</div>
+        {% endfor %}
+    </div>
+
+    {% if page_obj.has_other_pages %}
+        <div class="d-flex gap-3 mt-4">
+            {% if page_obj.has_previous %}
+                <a
+                    href="?page={{ page_obj.previous_page_number }}{% if search_value %}&search={{ search_value }}{% endif %}{% if sort %}&sort={{ sort }}{% endif %}"
+                    class="btn btn-light"
+                >
+                    Предыдущая
+                </a>
+            {% endif %}
+            
+            {% if page_obj.has_next %}
+                <a
+                    href="?page={{ page_obj.next_page_number }}{% if search_value %}&search={{ search_value }}{% endif %}{% if sort %}&sort={{ sort }}{% endif %}"
+                    class="btn btn-light"
+                >
+                    Следующая
+                </a>
+            {% endif %}
+        </div>
+    {% endif %}
+{% endblock content %}

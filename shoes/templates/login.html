@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+
+{% load django_bootstrap5 %}
+
+{% block content %}
+<div class="card" style="max-width: 500px;">
+    <div class="card-header">
+        <h1 class="card-title">{{title}}</h1>
+    </div>
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
+            {% bootstrap_form form show_help=False %}
+            {% bootstrap_button button_type="submit" content='Войти'%}
+        </form>
+        <hr>
+        <div class="d-flex flex-column gap-3">
+            <a href="{% url 'main:products' %}">Гость</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

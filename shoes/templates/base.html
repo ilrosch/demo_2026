@@ -1,0 +1,22 @@
+{% load static %}
+
+{% load django_bootstrap5 %}
+{% bootstrap_css %}
+{% bootstrap_javascript %}
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{{title}}{% endblock %}</title>
+    <link rel="icon" href="{% static 'img/favicon.ico' %}" type="image/x-icon">
+</head>
+
+{% block style %}{% endblock %}
+<body>
+    <div class='container d-flex flex-column gap-4 py-4'> 
+        {% block content %}{% endblock %}
+    </div>
+</body>
+</html>
