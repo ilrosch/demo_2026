@@ -13,10 +13,18 @@
     <link rel="icon" href="{% static 'img/favicon.ico' %}" type="image/x-icon">
 </head>
 
-{% block style %}{% endblock %}
+{% block style %}
+<style>
+    .form-control:focus {
+        border-color: #00FA9A !important;
+    }
+</style>
+{% endblock %}
 <body>
     <div class='container d-flex flex-column gap-4 py-4'> 
+        {% bootstrap_messages %} 
         {% block content %}{% endblock %}
     </div>
+    {% block script %}{% endblock %}
 </body>
 </html>

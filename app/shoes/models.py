@@ -15,6 +15,9 @@ class Categories(models.Model):
         managed = False
         db_table = 'categories'
 
+    def __str__(self):
+        return self.name
+
 
 class OrderItems(models.Model):
     order = models.ForeignKey('Orders', models.DO_NOTHING)
@@ -49,6 +52,9 @@ class PickPoints(models.Model):
         managed = False
         db_table = 'pick_points'
 
+    def __str__(self):
+        return f'{self.zipcode}, {self.city}, {self.street}'
+
 
 class Producers(models.Model):
     name = models.CharField(max_length=255)
@@ -57,19 +63,28 @@ class Producers(models.Model):
         managed = False
         db_table = 'producers'
 
+    def __str__(self):
+        return self.name
+
 
 class Products(models.Model):
-    articale = models.CharField(max_length=50)
-    name = models.CharField(max_length=255)
-    unit = models.ForeignKey('Units', models.DO_NOTHING)
-    price = models.IntegerField()
-    provider = models.ForeignKey('Providers', models.DO_NOTHING)
-    producer = models.ForeignKey(Producers, models.DO_NOTHING)
-    category = models.ForeignKey(Categories, models.DO_NOTHING)
-    sale = models.IntegerField(blank=True, null=True)
-    amount = models.IntegerField()
-    description = models.TextField(blank=True, null=True)
-    image = models.TextField(blank=True, null=True)
+    articale = models.CharField(max_length=50, verbose_name='Артикул')
+    name = models.CharField(max_length=255, verbose_name='Название')
+    unit = models.ForeignKey('Units', models.DO_NOTHING, verbose_name='Единица измерения')
+    price = models.IntegerField(verbose_name='Цена')
+    provider = models.ForeignKey('Providers', models.DO_NOTHING, verbose_name='Поставщик')
+    producer = models.ForeignKey(Producers, models.DO_NOTHING, verbose_name='Производитель')
+    category = models.ForeignKey(Categories, models.DO_NOTHING, verbose_name='Категория')
+    sale = models.IntegerField(blank=True, null=True, verbose_name='Скидка')
+    amount = models.IntegerField(verbose_name='Количество')
+    description = models.TextField(blank=True, null=True, verbose_name='Описание')
+    image = models.ImageField(
+        upload_to='images/',
+        blank=True,
+        null=True,
+        verbose_name='Картинка',
+        help_text='Загрузите изображение (JPG, PNG)'
+    )
 
     class Meta:
         managed = False
@@ -89,6 +104,9 @@ class Providers(models.Model):
         managed = False
         db_table = 'providers'
 
+    def __str__(self):
+        return self.name
+
 
 class Roles(models.Model):
     name = models.CharField(max_length=255)
@@ -96,6 +114,9 @@ class Roles(models.Model):
     class Meta:
         managed = False
         db_table = 'roles'
+
+    def __str__(self):
+        return self.name
 
 
 class StatusOrder(models.Model):
@@ -105,6 +126,9 @@ class StatusOrder(models.Model):
         managed = False
         db_table = 'status_order'
 
+    def __str__(self):
+        return self.name
+
 
 class Units(models.Model):
     name = models.CharField(max_length=50)
@@ -112,6 +136,9 @@ class Units(models.Model):
     class Meta:
         managed = False
         db_table = 'units'
+
+    def __str__(self):
+        return self.name
 
 
 class Users(models.Model):

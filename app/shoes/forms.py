@@ -1,5 +1,6 @@
 from django import forms
 from django.contrib.auth.models import User
+from shoes.models import Products
 
 
 class LoginForm(forms.ModelForm):
@@ -26,3 +27,14 @@ class LoginForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+
+class ProductForm(forms.ModelForm):
+    """Форма добавление/редактирования товара"""
+
+    class Meta:
+        model = Products
+        fields = '__all__'
+
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)

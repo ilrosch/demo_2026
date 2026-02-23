@@ -21,8 +21,49 @@
 {% block content %}
     {% if user_role not in 'guest' %}
         <div class="d-flex justify-content-end align-items-center gap-3 bg-dark p-3 rounded-4">
-            <div class="text-light">{{user}}</div>
+            {% if user_role in 'admin' %}
+                <a href="{% url 'main:product_create' %}" class="btn btn-light" style="margin-left: 0; margin-right: auto;">Добавить товар</a>
+            {% endif %}
+            <div class="text-light">{{ user }}</div>
             <a href="{% url 'main:logout' %}" class="btn btn-light">Выход</a>
+        </div>
+
+        <div class="d-flex align-items-center p-3 bg-light rounded-4">
+            <form class="d-flex gap-2 w-100">
+                {% csrf_token %}
+                <div class="form-floating col-3">
+                    <input type="text"
+                        class="form-control" 
+                        id="search" 
+                        name="search" 
+                        placeholder="Поиск"
+                        value="{{ search_value }}">
+                    <label for="search">Поиск</label>
+                </div>
+                <div class="form-floating col-3">
+                    <select class="form-select" id="sort" name="sort">
+                        <option value="name-asc" {% if sort_by == 'name-asc' %}selected{% endif %}>А-Я</option>
+                        <option value="name-desc" {% if sort_by == 'name-desc' %}selected{% endif %}>Я-А</option>
+                        <option value="price-asc" {% if sort_by == 'price-asc' %}selected{% endif %}>По возрастанию цены</option>
+                        <option value="price-desc" {% if sort_by == 'price-desc' %}selected{% endif %}>По убыванию цены</option>
+                        <option value="amount-asc" {% if sort_by == 'amount-asc' %}selected{% endif %}>По возрастанию кол-ва</option>
+                        <option value="amount-desc" {% if sort_by == 'amount-desc' %}selected{% endif %}>По убыванию кол-ва</option>
+                    </select>
+                    <label for="sort">Сортировка</label>
+                </div>
+                <div class="form-floating col-3">
+                    <select class="form-select" id="provider" name="provider">
+                        <option value="">Все поставщики</option>
+                        {% for provider in providers %}
+                            <option value="{{ provider.name }}" {% if provider_filter == provider.name %}selected{% endif %}>
+                                {{ provider.name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                    <label for="provider">Поставщик</label>
+                </div>
+                <button type="reset" class="btn btn-danger">Сброс</button>
+            </form>
         </div>
     {% endif %}
 
@@ -31,29 +72,36 @@
             <div class="card rounded-3 {% if product.sale > 15 %}big-sale{% endif %} {% if product.amount == 0 %}empty{% endif %}">
                 <div class="row card-body">
                     <div class="col-4">
-                        <img src="{% if product.image %}{% static product.image %}{% else %}{% static 'img/picture.png' %}{% endif %}" alt="Фото" style="width: 100%; object-fit: contain;">
+                        <img src="{% if product.image %}{{ product.image.url }}{% else %}{% static 'img/picture.png' %}{% endif %}" 
+                             alt="Фото" style="width: 100%; object-fit: contain;">
                     </div>
                     <div class="col-6">
-                        <h2 class="h3 mb-3">{{product.category.name}} | {{product.name}}</h2>
+                        <h2 class="h3 mb-3">{{ product.category.name }} | {{ product.name }}</h2>
                         <ul class="list-group">
-                            <li class="list-group-item">Описание товара: {{product.description}}</li>
-                            <li class="list-group-item">Производитель: {{product.producer.name}}</li>
-                            <li class="list-group-item">Поставщик: {{product.provider.name}}</li>
+                            <li class="list-group-item">Описание товара: {{ product.description }}</li>
+                            <li class="list-group-item">Производитель: {{ product.producer.name }}</li>
+                            <li class="list-group-item">Поставщик: {{ product.provider.name }}</li>
                             <li class="list-group-item">Цена:
                                 {% if product.sale and product.sale > 0 %}
-                                <span style="color: black">{{ product.final_price|floatformat:0 }}</span>
-                                <span style="color: red"><s>{{ product.price }}</s></span>
+                                    <span style="color: black">{{ product.final_price|floatformat:0 }}</span>
+                                    <span style="color: red"><s>{{ product.price }}</s></span>
                                 {% else %}
-                                    {{product.price}}
+                                    {{ product.price }}
                                 {% endif %}
                             </li>
-                            <li class="list-group-item">Единица измерения: {{product.unit.name}}</li>
-                            <li class="list-group-item">Количество на складе: {{product.amount}}</li>
+                            <li class="list-group-item">Единица измерения: {{ product.unit.name }}</li>
+                            <li class="list-group-item">Количество на складе: {{ product.amount }}</li>
                         </ul>
                     </div>
                     <div class="col-2 text-center">
-                        <div>Скидка</div>
-                        <p>{{product.sale}}%</p>
+                        <div class="border rounded-3 p-2 mb-3">
+                            <div>Скидка</div>
+                            <div>{{ product.sale }}%</div>
+                        </div>
+                        <div class="d-flex flex-column gap-2">
+                            <a href="{% url 'main:product_update' product.id %}">Редактировать</a>
+                            <a href="{% url 'main:product_delete' product.id %}">Удалить</a>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -65,22 +113,66 @@
     {% if page_obj.has_other_pages %}
         <div class="d-flex gap-3 mt-4">
             {% if page_obj.has_previous %}
-                <a
-                    href="?page={{ page_obj.previous_page_number }}{% if search_value %}&search={{ search_value }}{% endif %}{% if sort %}&sort={{ sort }}{% endif %}"
-                    class="btn btn-light"
-                >
+                <a href="?page={{ page_obj.previous_page_number }}&search={{ search_value }}&sort={{ sort_by }}&provider={{ provider_filter }}"
+                   class="btn btn-light">
                     Предыдущая
                 </a>
             {% endif %}
             
             {% if page_obj.has_next %}
-                <a
-                    href="?page={{ page_obj.next_page_number }}{% if search_value %}&search={{ search_value }}{% endif %}{% if sort %}&sort={{ sort }}{% endif %}"
-                    class="btn btn-light"
-                >
+                <a href="?page={{ page_obj.next_page_number }}&search={{ search_value }}&sort={{ sort_by }}&provider={{ provider_filter }}"
+                   class="btn btn-light">
                     Следующая
                 </a>
             {% endif %}
         </div>
     {% endif %}
 {% endblock content %}
+
+{% block script %}
+<script>
+    // Курсор в конец при вводе
+    const setFocusToEnd = (element) =>  {
+        element.focus();
+        const length = element.value.length;
+        element.setSelectionRange(length, length);
+    }
+
+    setFocusToEnd(document.querySelector('#search'))
+
+    // Поиск, сортировка, фильтрация
+    const updateFilters = () => {
+        const search = document.querySelector('#search').value;
+        const sort = document.querySelector('#sort').value;
+        const provider = document.querySelector('#provider').value;
+
+        const params = new URLSearchParams();
+        if (search) params.set('search', search);
+        if (sort) params.set('sort', sort);
+        if (provider) params.set('provider', provider);
+        params.set('page', '1');
+
+        window.location.href = '?' + params.toString();
+    };
+
+    let tID;
+    document.querySelector('#search').addEventListener('input', (e) => {
+        clearTimeout(tID);
+        tID = setTimeout(updateFilters, 500);
+    });
+
+    document.querySelector('#sort').addEventListener('change', updateFilters);
+    document.querySelector('#provider').addEventListener('change', updateFilters);
+
+    // Сброс
+    document.querySelector('form').addEventListener('reset', (e) => {
+        const params = new URLSearchParams();
+        params.set('search', '');
+        params.set('sort', '');
+        params.set('provider', '');
+        params.set('page', '1');
+
+        window.location.href = '?' + params.toString();
+    });
+</script>
+{% endblock %}

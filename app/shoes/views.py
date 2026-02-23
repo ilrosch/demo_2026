@@ -1,11 +1,12 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.db.models import Q
 from django.core.paginator import Paginator
 
-from shoes.forms import LoginForm
-from shoes.models import Products
+from shoes.forms import LoginForm, ProductForm
+from shoes.models import Products, Providers
 
 
 def login_page(req):
@@ -40,7 +41,7 @@ def logout_page(req):
     """Выход из системы"""
 
     logout(req)
-    messages.info(req, 'Вы успешно вышли из системы.')
+    messages.success(req, 'Вы успешно вышли из системы.')
     return redirect('main:login')
 
 
@@ -56,8 +57,10 @@ def products_page(req):
     """Каталог товаров"""
 
     user_role = get_user_role(req.user)
+    providers = Providers.objects.all()
+
     products = Products.objects.select_related('category', 'provider', 'producer', 'unit')
-     
+
     if user_role in ['manager', 'admin']:
         search_value = req.GET.get('search', '')
         if search_value:
@@ -67,7 +70,11 @@ def products_page(req):
                 Q(provider__name__icontains=search_value) |
                 Q(producer__name__icontains=search_value)
             )
-            
+
+        provider_filter = req.GET.get('provider', '') 
+        if provider_filter:
+            products = products.filter(provider__name=provider_filter)
+
         sort_by = req.GET.get('sort', 'name-asc')
         match sort_by:
             case 'name-asc':
@@ -78,8 +85,16 @@ def products_page(req):
                 products = products.order_by('price')
             case 'price-desc':
                 products = products.order_by('-price')
+            case 'amount-asc':
+                products = products.order_by('amount')
+            case 'amount-desc':
+                products = products.order_by('-amount')
+            case _:
+                products = products.order_by('name')
+        
     else:
         search_value = ''
+        provider_filter = ''
         sort_by = ''
 
     paginator = Paginator(products, 10)
@@ -94,38 +109,67 @@ def products_page(req):
             'user': req.user,
             'user_role': user_role,
             'page_obj': page_obj,
-            'products': products,
+            'providers': providers,
             'sort_by': sort_by,
             'search_value': search_value,
+            'provider_filter': provider_filter,
         }
     )
 
 
-# def login_view(request):
-#     """Представление для входа в систему"""
-#     if request.method == 'POST':
-#         username = request.POST.get('username')
-#         password = request.POST.get('password')
+@login_required
+def product_create_page(req):
+    """Добавление товара (только для администратора)"""
 
-#         user = authenticate(request, username=username, password=password)
-#         if user is not None:
-#             login(request, user)
-#             messages.success(request, f'Добро пожаловать, {user.get_full_name() or user.username}!')
-#             return redirect('products:product_list')
-#         else:
-#             messages.error(request, 'Неверное имя пользователя или пароль.')
+    user_role = get_user_role(req.user)
+    if user_role not in 'admin':
+        messages.info(req, 'Действие только для администратора!')
+        return redirect('main:products')
 
-#     return render(request, 'accounts/login.html')
+    if req.method == 'POST':
+        form = ProductForm(req.POST, req.FILES)
+        if form.is_valid():
+            form.save()
+            messages.success(req, 'Товар добавлен успешно!')
+            return redirect('main:products')
+    else:
+        form = ProductForm()
+
+    return render(
+        request=req,
+        template_name='product.html',
+        context={
+            'title': 'Добавление товара',
+            'form': form,
+        }
+    )
 
 
-# def logout_view(request):
-#     """Представление для выхода из системы"""
-#     logout(request)
-#     messages.info(request, 'Вы успешно вышли из системы.')
-#     return redirect('accounts:login')
+@login_required
+def product_update_page(req, pk):
+    """Редактирование товара (только для администратора)"""
 
+    user_role = get_user_role(req.user)
+    if user_role not in 'admin':
+        messages.info(req, 'Действие только для администратора!')
+        return redirect('main:products')
 
-# @login_required
-# def profile_view(request):
-#     """Представление профиля пользователя"""
-#     return render(request, 'accounts/profile.html')
+    product = Products.objects.get(id=pk)
+
+    if req.method == 'POST':
+        form = ProductForm(req.POST, req.FILES, instance=product)
+        if form.is_valid():
+            form.save()
+            messages.success(req, 'Товар обновлен успешно!')
+            return redirect('main:products')
+    else:
+        form = ProductForm(instance=product)
+
+    return render(
+        request=req,
+        template_name='product.html',
+        context={
+            'title': 'Редактирование товара',
+            'form': form,
+        }
+    )
