@@ -7,7 +7,7 @@
         <a href="{% url 'main:products' %}" class="btn btn-outline-secondary mb-3">Назад</a>
         <h1>{{ title }}</h1>
         <hr>
-        <form method="post" class="form">
+        <form method="post" class="form" enctype="multipart/form-data">
             {% csrf_token %}
             {% bootstrap_form form %}
             <button type="submit" class="btn" style="background: #00FA9A;">Сохранить</button>

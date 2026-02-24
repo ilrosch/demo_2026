@@ -83,7 +83,7 @@ class Products(models.Model):
         blank=True,
         null=True,
         verbose_name='Картинка',
-        help_text='Загрузите изображение (JPG, PNG)'
+        help_text='Загрузите изображение (JPG, PNG)',
     )
 
     class Meta:
@@ -95,6 +95,9 @@ class Products(models.Model):
         if self.sale and self.sale > 0:
             return self.price * (1 - self.sale / 100)
         return self.price
+
+    def __str__(self):
+        return f'{self.articale} | {self.name}'
 
 
 class Providers(models.Model):
@@ -152,3 +155,6 @@ class Users(models.Model):
     class Meta:
         managed = False
         db_table = 'users'
+
+    def __str__(self):
+        return f'{self.last_name} {self.first_name} {self.middle_name}'

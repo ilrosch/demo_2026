@@ -98,10 +98,12 @@
                             <div>Скидка</div>
                             <div>{{ product.sale }}%</div>
                         </div>
-                        <div class="d-flex flex-column gap-2">
-                            <a href="{% url 'main:product_update' product.id %}">Редактировать</a>
-                            <a href="{% url 'main:product_delete' product.id %}">Удалить</a>
-                        </div>
+                        {% if user_role in 'admin' %}
+                            <div class="d-flex flex-column gap-2">
+                                <a href="{% url 'main:product_update' product.id %}">Редактировать</a>
+                                <a href="{% url 'main:product_delete' product.id %}">Удалить</a>
+                            </div>
+                        {% endif %}
                     </div>
                 </div>
             </div>

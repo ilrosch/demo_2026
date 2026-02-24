@@ -1,4 +1,5 @@
-from django.shortcuts import render, redirect
+import copy
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
@@ -6,7 +7,7 @@ from django.db.models import Q
 from django.core.paginator import Paginator
 
 from shoes.forms import LoginForm, ProductForm
-from shoes.models import Products, Providers
+from shoes.models import Products, Providers, Users
 
 
 def login_page(req):
@@ -100,7 +101,7 @@ def products_page(req):
     paginator = Paginator(products, 10)
     page_num = req.GET.get('page')
     page_obj = paginator.get_page(page_num)
-    
+
     return render(
         request=req,
         template_name='products.html',
@@ -154,11 +155,15 @@ def product_update_page(req, pk):
         messages.info(req, 'Действие только для администратора!')
         return redirect('main:products')
 
-    product = Products.objects.get(id=pk)
+    product = get_object_or_404(Products, pk=pk)
+    old_product = copy.deepcopy(product)
 
     if req.method == 'POST':
         form = ProductForm(req.POST, req.FILES, instance=product)
         if form.is_valid():
+            # Удаление фото при добавление новой или очистке старой
+            if ('image' in req.FILES and old_product.image) or req.POST.get('image-clear') == 'on':
+                old_product.image.delete()
             form.save()
             messages.success(req, 'Товар обновлен успешно!')
             return redirect('main:products')
@@ -173,3 +178,18 @@ def product_update_page(req, pk):
             'form': form,
         }
     )
+
+
+@login_required
+def product_delete(req, pk):
+    """Удаление товара (только для администратора)"""
+
+    user_role = get_user_role(req.user)
+    if user_role not in 'admin':
+        messages.info(req, 'Действие только для администратора!')
+        return redirect('main:products')
+
+    product = get_object_or_404(Products, pk=pk)
+    product.delete()
+    messages.success(req, 'Товар успешно удален!')
+    return redirect('main:products')

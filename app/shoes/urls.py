@@ -11,6 +11,6 @@ urlpatterns = [
     path('product/', include([
         path('create/', views.product_create_page, name='product_create'),
         path('update/<int:pk>/', views.product_update_page, name='product_update'),
-        path('delete/<int:pk>/', views.product_create_page, name='product_delete'),
+        path('delete/<int:pk>/', views.product_delete, name='product_delete'),
     ]))
 ]
